@@ -323,6 +323,18 @@ build_recaps <- function(rp, g, sigma, pg = NULL, cs = NULL) {
   dr <- rp$dr
   res_dict <- sort(unique(na.omit(dr$res)))
   dr[, res_i := match(res, res_dict) - 1L]
+  # score after each drive (away, home): each scoring play belongs to the drive it happened on, and a
+  # play whose drive isn't in the list takes the drive before it. Points only go up, so the score after
+  # drive k is the last scoring play at or before it.
+  dr[, ord_i := seq_len(.N), by = game_id]
+  sdr <- merge(rp$sc[, .(game_id, drive_id, hp, ap)], dr[, .(game_id, drive_id, ord_i)], by = c("game_id", "drive_id"), all.x = TRUE)
+  sdr <- sdr[order(game_id, hp + ap)]
+  sdr[, ord_i := { x <- ord_i; for (i in seq_along(x)) if (is.na(x[i])) x[i] <- if (i > 1L) x[i - 1L] else 1L; cummax(x) }, by = game_id]
+  sdr <- sdr[, .(hs = hp[.N], as_ = ap[.N]), by = .(game_id, ord_i)]
+  dr <- merge(dr, sdr, by = c("game_id", "ord_i"), all.x = TRUE, sort = FALSE)
+  setorder(dr, game_id, ord_i)
+  dr[, `:=`(hs = nafill(hs, type = "locf"), as_ = nafill(as_, type = "locf")), by = game_id]
+  dr[is.na(hs), hs := 0L]; dr[is.na(as_), as_ := 0L]
   sc <- merge(rp$sc, dr[, .(game_id, drive_id, d_home = home, d_plays = plays, d_yds = yds, d_secs = secs)],
               by = c("game_id", "drive_id"), all.x = TRUE)
   sc[, s_home := h_pts > a_pts]
@@ -376,7 +388,8 @@ build_recaps <- function(rp, g, sigma, pg = NULL, cs = NULL) {
     x <- dr_by[[k]]
     if (!is.null(x)) o$dr <- (x[, .(side = as.integer(home), per, clk, s = as.integer(s_ytg), e = as.integer(e_ytg),
                                             deep = as.integer(deep), plays = as.integer(plays), yds = as.integer(yds),
-                                            secs = as.integer(secs), res = res_i, pts = as.integer(pts))])
+                                            secs = as.integer(secs), res = res_i, pts = as.integer(pts),
+                                            as = as.integer(as_), hs = as.integer(hs))])
     x <- gt_by[[k]]
     if (!is.null(x)) o$gt <- list(x$t, x$per, x$clock)
     x <- pg_by[[k]]

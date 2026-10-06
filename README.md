@@ -231,6 +231,14 @@ Each build writes every upcoming game's line, win chance and total to `predictio
 - **Weather and rest.** Not modelled; no public weather feed was found in the release files. Travel distance was tested and added nothing.
 - **Coaching changes and preseason market win totals.** No public source in the release files. Both would most help weeks 1–4.
 
+## c3.4.1 patch notes
+
+- **Player stats in previews and recaps.** The matchup preview's Key players and the recap's new Player stats section have the same Advanced / Traditional switch as the team page (it carries across pages). Traditional is the team page's stat leaders. Advanced is its leaders by EPA per play and success rate. In a recap the switch also changes the box score: Traditional is the game's lines, Advanced is plays, EPA per play and success rate for each passer, runner and receiver in that game. Season leaders for both teams sit below the box score.
+- **"Where the edges were" in recaps.** The ten matchups from the preview, each offense against the other defense, with what happened. The solid marker is the offense's number in this game placed among every team-game of the season (counted from `gteam`, nothing new to build); the hollow marker is where the season numbers said it would go, as in the preview. Each row says who won the matchup and whether that was as expected or against the numbers; above the rows, a line counts the 20 matchups and up to three of the biggest reversals are named. Rows with too few plays (under 20 plays for efficiency, 8 rushes or dropbacks, 4 third downs, 2 red-zone trips) show "Not enough plays".
+- **Rolling score in the drive tracker.** Each drive shows the score after it, away team first, with the side that scored highlighted. `recap_cfb.R` now ships it with every drive (two new columns at the end of each `dr` row); the page falls back to rebuilding it from the scoring plays when it's missing, so a cached or older build still works. On the 389 games in the sample the final drive's score matches the official final in 388; the other is the game the play-by-play is 6 points short on.
+- **Key plays swing.** The "+" on each key play was the swing in the helped team's win chance, but the line under it showed the favourite's win chance before and the helped team's after, so the two often didn't match. It now shows the helped team's own win chance before and after, rounded as displayed, and the "+" is exactly the difference.
+- Ratings, predictions, simulation and the report card are untouched. No cache needs rebuilding: `RECAP_VERSION` is unchanged.
+
 ## c3.4 patch notes
 
 - New `recap_cfb.R`, `#game/<id>` recap screen, week-by-week Games tab, recap links everywhere a game appears, a full-schedule export (`schedule`), per-game team and player box scores (`gteam`, `gbox`, `pnames`).
